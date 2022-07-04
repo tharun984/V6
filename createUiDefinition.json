@@ -1,0 +1,231 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/0.1.2-preview/CreateUIDefinition.MultiVm.json#",
+    "handler": "Microsoft.Azure.CreateUIDef",
+    "version": "0.1.2-preview",
+    "parameters": {
+        "config": {
+            "basics": {
+                "description": "Metallic backup gateway wizard",
+				"subscription": {},
+				"resourceGroup": {},
+                "location": {
+					"label": "Resource group region",
+					"toolTip": "This field will be auto-populated if existing resource group is selected.",
+					"visible": true
+                }
+            }
+        },
+        "basics": [
+            {
+                "name": "vmName",
+                "type": "Microsoft.Common.TextBox",
+                "label": "Virtual Machine name",
+                "toolTip": "The name of the Virtual Machine.",
+                "constraints": {
+                    "required": true,
+                    "regex": "^[a-z0-9A-Z-]{3,15}$",
+                    "validationMessage": "The VM Name must be between 3 and 15 characters long and contain letters, numbers and hyphens only."
+                }
+            },
+			{
+                "name": "armApiControl",
+                "type": "Microsoft.Solutions.ArmApiControl",
+                "request": {
+                    "method": "GET",
+                    "path": "[concat(subscription().id, '/locations?api-version=2020-01-01')]"
+                }
+            },
+            {
+                "name": "region",
+                "type": "Microsoft.Common.DropDown",
+                "label": "VM Region",
+				"filter": true,
+                "toolTip": "Choose the region same as target DB workloads region.",
+                "constraints": {
+                "allowedValues": "[map(basics('armApiControl').value, (item) => parse(concat('{\"label\":\"', item.regionalDisplayName, '\",\"value\":\"', item.name, '\"}')))]",
+                "required": true
+                },
+                "visible": true
+            },
+            {
+                "name": "adminUsername",
+                "type": "Microsoft.Compute.UserNameTextBox",
+                "label": "Username",
+                "toolTip": "Admin username for the machine",
+                "osPlatform": "Windows",
+                "constraints": {
+                    "required": true
+                }
+            },
+            {
+                "name": "adminPassword",
+                "type": "Microsoft.Compute.CredentialsCombo",
+                "label": {
+                  "password": "Password",
+                  "confirmPassword": "Confirm password"
+                },
+                "toolTip": {
+                  "password": ""
+                },
+                "constraints": {
+                  "required": true,
+                  "customPasswordRegex": "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{12,}$",
+                  "customValidationMessage": "The password must be alphanumeric, Minimum 12 characters, at least one uppercase letter, one lowercase letter, one number and one special character:."
+                },
+                "options": {
+                  "hideConfirmation": false
+                },
+                "osPlatform": "Windows",
+                "visible": true
+              }
+        ],
+        "steps": [
+            {
+                "name": "VirtualMachineConfig",
+                "label": "Virtual Machine Settings",
+                "subLabel": {
+                    "preValidation": "Configure the virtual machine's resources and settings",
+                    "postValidation": "Done"
+                },
+                "bladeTitle": "Virtual Machine Settings",
+                "elements": [
+                    {
+                        "name": "osversion",
+                        "type": "Microsoft.Common.DropDown",
+                        "label": "OS Version",
+                        "defaultValue": "2016-datacenter-gensecond",
+                        "constraints": {
+                            "allowedValues": [
+                                {
+                                    "label": "2016-datacenter-gensecond",
+                                    "value": "2016-datacenter-gensecond"
+                                },
+                                {
+                                    "label": "2019-datacenter-gensecond",
+                                    "value": "2019-datacenter-gensecond"
+                                }
+                            ],
+                            "required": true
+                        },
+                        "visible": true
+                    },
+                    {
+                        "name": "bet",
+                        "type": "Microsoft.Common.DropDown",
+                        "label": "Backup data size",
+                        "toolTip": "Backup data size.",
+						"filter": true,
+						"constraints": {
+						"allowedValues": [
+							{
+								"label": "Upto 25TB (extra small)",
+								"value": "[parse(concat('{\"vmsize\":\"', 'Standard_D2s_v4', '\",\"dataDiskSize\":\"', '128', '\"}'))]"
+							},
+							{
+								"label": "Upto 50TB (extra small)",
+								"value": "[parse(concat('{\"vmsize\":\"', 'Standard_D2s_v4', '\",\"dataDiskSize\":\"', '256', '\"}'))]"
+							},
+							{
+								"label": "Upto 100TB (small)",
+								"value": "[parse(concat('{\"vmsize\":\"', 'Standard_D4s_v4', '\",\"dataDiskSize\":\"', '512', '\"}'))]"
+							},
+							{
+								"label": "Upto 125TB (medium)",
+								"value": "[parse(concat('{\"vmsize\":\"', 'Standard_D8s_v4', '\",\"dataDiskSize\":\"', '512', '\"}'))]"
+							},
+							{
+								"label": "Upto 200TB (medium)",
+								"value": "[parse(concat('{\"vmsize\":\"', 'Standard_D8s_v4', '\",\"dataDiskSize\":\"', '1024', '\"}'))]"
+							}
+						],
+						"required": true
+					},
+    				"visible": true
+					},
+                    {
+                        "name": "virtualNetworksApi",
+                        "type": "Microsoft.Solutions.ArmApiControl",
+                        "request": {
+                            "method": "GET",
+                            "path": "[concat(subscription().id, '/providers/Microsoft.Network/virtualNetworks?api-version=2021-08-01')]"
+                        }
+                    },
+                    {
+                        "name": "virtualNetwork",
+                        "type": "Microsoft.Common.DropDown",
+                        "label": "Virtual Network",
+                        "filter": true,
+                        "toolTip": "Existing Virtual networks are shown based on selected VM Region",
+                        "constraints": {
+                            "allowedValues": "[map(filter(steps('VirtualMachineConfig').virtualNetworksApi.value, (item) => equals(item.location, basics('region'))), (item) => parse(concat('{\"label\":\"',item.name,'\",\"value\":{\"name\":\"',item.name,'\",\"id\":\"',item.id,'\",\"addressprefixes\":\"',item.properties.addressSpace.addressPrefixes, '\"}}')))]",
+                            "required": true
+                        },
+                        "visible": true
+                    },
+                    {
+                        "name": "subnetsApi",
+                        "type": "Microsoft.Solutions.ArmApiControl",
+                        "request": {
+                            "method": "GET",
+                            "path": "[concat(subscription().id, '/resourceGroups/', substring(steps('VirtualMachineConfig').virtualNetwork.id,add(indexOf(steps('VirtualMachineConfig').virtualNetwork.id,'resourceGroups/'), 15),sub(indexOf(steps('VirtualMachineConfig').virtualNetwork.id,'/providers/'), add(indexOf(steps('VirtualMachineConfig').virtualNetwork.id,'resourceGroups/'), 15))),'/providers/Microsoft.Network/virtualNetworks/',steps('VirtualMachineConfig').virtualNetwork.name,'/subnets?api-version=2021-08-01')]"
+                        }
+                    },
+                    {
+                        "name": "subnets",
+                        "type": "Microsoft.Common.DropDown",
+                        "label": "Subnet",
+                        "filter": true,
+                        "toolTip": "Select existing subnet",
+                        "constraints": {
+                            "allowedValues": "[map(steps('VirtualMachineConfig').subnetsApi.value, (item) => parse(concat('{\"label\":\"', concat(item.name, ' (', item.properties.addressPrefix, ')'), '\",\"value\":{\"name\":\"',item.name,'\",\"addresspre\":\"',item.properties.addressPrefix, '\"}}')))]",
+                            "required": true
+                        },
+                        "visible": true
+                    }
+                ]
+            },
+            {
+                "bladeTitle": "Metallic Configuration",
+                "name": "metallicconfig",
+                "label": "Metallic Configuration",
+                "subLabel": {
+                    "preValidation": "Configure the metallic settings",
+                    "postValidation": "Done"
+                },
+                "elements": [
+                    {
+                        "name": "companyauthcode",
+                        "type": "Microsoft.Common.TextBox",
+                        "label": "Metallic AuthCode",
+                        "toolTip": "Copy the AuthCode from your Metallic account",
+                        "constraints": {
+                            "required": true,
+                            "regex": "^[a-zA-Z0-9]{9}$",
+                            "validationMessage": "Auth code must be length of 9 with only alphanumeric"
+                        }
+                    }
+                ]
+            }
+        ],
+        "outputs": {
+            "location": "[basics('region')]",
+            "vmName": "[basics('vmName')]",
+            "adminUsername": "[basics('adminUsername')]",
+            "adminPassword": "[basics('adminPassword').password]",
+
+            "vmSize": "[steps('VirtualMachineConfig').bet.vmsize]",
+			"dataDiskSize": "[steps('VirtualMachineConfig').bet.dataDiskSize]",
+            "OSVersion": "[steps('VirtualMachineConfig').osversion]",
+
+            "virtualNetworkNewOrExisting": "existing",
+            "virtualNetworkName": "[steps('VirtualMachineConfig').virtualNetwork.name]",
+            "addressPrefixes": "[steps('VirtualMachineConfig').virtualNetwork.addressprefixes]",
+            "subnetName": "[steps('VirtualMachineConfig').subnets.name]",
+            "subnetPrefix": "[steps('VirtualMachineConfig').subnets.addresspre]",
+            "virtualNetworkResourceGroupName": "[substring(steps('VirtualMachineConfig').virtualNetwork.id,add(indexOf(steps('VirtualMachineConfig').virtualNetwork.id,'resourceGroups/'), 15),sub(indexOf(steps('VirtualMachineConfig').virtualNetwork.id,'/providers/'), add(indexOf(steps('VirtualMachineConfig').virtualNetwork.id,'resourceGroups/'), 15)))]",
+
+            "companyAuthCode": "[steps('metallicconfig').companyauthcode]"
+
+        }
+    }
+}

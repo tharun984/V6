@@ -242,7 +242,7 @@
       ],
       "properties": {
           "roleDefinitionId": "[variables('Reader')]",
-          "principalId": "[reference(resourceId('Microsoft.Compute/virtualMachines', variables('vName')), '2021-03-01').principalId]",
+          "principalId": "[reference(resourceId('Microsoft.Compute/virtualMachines', variables('vName'))).principalId]",
           "principalType": "ServicePrincipal"
       }
     },

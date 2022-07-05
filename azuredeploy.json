@@ -111,6 +111,12 @@
       "metadata": {
         "description": "AuthCode from your Metallic account"
       }
+    },
+    "identity":{
+      "type": "object",
+      "defaultValue": {
+        "type": "None"
+      }
     }
   },
    "variables": {
@@ -119,7 +125,7 @@
      "diskname": "[concat(parameters('vmName'), '_DataDisk_0')]",
      "addressPrefixes": "[split(parameters('addressPrefixes'), ',')]",
      "Reader": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', 'acdd72a7-3385-48ef-bd42-f606fba81ae7')]",
-     "bootstrapRoleAssignmentId": "[guid(concat(resourceGroup().id, 'Reader'))]"
+     "bootstrapRoleAssignmentId": "[guid(concat(resourceGroup().id, 'Reader', parameters('vmName')))]"
   },
   "resources": [
     {
@@ -184,9 +190,7 @@
       "apiVersion": "2021-03-01",
       "name": "[parameters('vmName')]",
       "location": "[parameters('location')]",
-      "identity": {
-        "type": "SystemAssigned"
-      },
+      "identity": "[if(not(equals(parameters('identity').type, 'None')), parameters('identity') , json('null'))]",
       "properties": {
         "hardwareProfile": {
           "vmSize": "[parameters('vmsize')]"
@@ -234,10 +238,10 @@
       ]
     },
     {
+      "condition": "[equals(parameters('identity').type, 'SystemAssigned')]",
       "type": "Microsoft.Authorization/roleAssignments",
       "apiVersion": "2018-09-01-preview",
       "name": "[variables('bootstrapRoleAssignmentId')]",
-      "scope": "/",
       "dependsOn": [
           "[concat('Microsoft.Compute/virtualMachines/',variables('vName'))]"
       ],

@@ -237,7 +237,7 @@
       "type": "Microsoft.Authorization/roleAssignments",
       "apiVersion": "2018-09-01-preview",
       "name": "[variables('bootstrapRoleAssignmentId')]",
-      "scope": "[subscription().id]",
+      "scope": "/",
       "dependsOn": [
           "[concat('Microsoft.Compute/virtualMachines/',variables('vName'))]"
       ],

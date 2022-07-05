@@ -181,7 +181,23 @@
                             "required": true
                         },
                         "visible": true
-                    }
+                    },
+					{
+					"name": "identity",
+					"type": "Microsoft.ManagedIdentity.IdentitySelector",
+					"label": "Managed Identity Configuration",
+					"toolTip": {
+						"userAssignedIdentity": "Add user assigned identities to grant the resource access to other existing resources."
+					},
+					"defaultValue": {
+						"systemAssignedIdentity": "Off"
+					},
+					"options": {
+						"hideSystemAssignedIdentity": true,
+						"hideUserAssignedIdentity": false
+					},
+					"visible": true
+					}
                 ]
             },
             {
@@ -224,7 +240,8 @@
             "subnetPrefix": "[steps('VirtualMachineConfig').subnets.addresspre]",
             "virtualNetworkResourceGroupName": "[substring(steps('VirtualMachineConfig').virtualNetwork.id,add(indexOf(steps('VirtualMachineConfig').virtualNetwork.id,'resourceGroups/'), 15),sub(indexOf(steps('VirtualMachineConfig').virtualNetwork.id,'/providers/'), add(indexOf(steps('VirtualMachineConfig').virtualNetwork.id,'resourceGroups/'), 15)))]",
 
-            "companyAuthCode": "[steps('metallicconfig').companyauthcode]"
+            "companyAuthCode": "[steps('metallicconfig').companyauthcode]",
+			"identity": "[steps('VirtualMachineConfig').identity]"
 
         }
     }

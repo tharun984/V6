@@ -187,7 +187,7 @@
 					"type": "Microsoft.ManagedIdentity.IdentitySelector",
 					"label": "Managed Identity Configuration",
 					"toolTip": {
-						"userAssignedIdentity": "Add user assigned identities to grant the resource access to other existing resources."
+						"userAssignedIdentity": "Add user assigned identities to grant the resource access to other existing resources. Note: To read and assign user managed identity, user must have Managed Identity Operator role assignment and Ensure at minimum the reader role is assigned to the existing user managed identity at subscription level."
 					},
 					"defaultValue": {
 						"systemAssignedIdentity": "Off"

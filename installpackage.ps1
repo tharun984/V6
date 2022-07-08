@@ -63,8 +63,14 @@ Wait-Process -InputObject (Get-Process setup)
 # files-cleanup
 Remove-Item -Recurse -Force 'C:\MetallicBackupGatewayPackage\backupgateway-package-folder' -ErrorAction SilentlyContinue
 
-# install Microsoft Visual C++ redistributable
+# install Microsoft Visual C++ redistributable (Dependency for MySQL backups)
 $redistributablePath = 'C:\VC_redist.x64.exe'
 (New-Object System.Net.WebClient).DownloadFile('https://aka.ms/vs/17/release/vc_redist.x64.exe', $redistributablePath)
 Start-Process -FilePath $redistributablePath -Args "/install /quiet /norestart" -Verb RunAs -Wait
 Remove-Item $redistributablePath
+
+# install SQL Server Management Studio(SSMS) (Dependency for Azure AD Authentication)
+$ssmsPath = 'C:\SSMS-Setup-ENU.exe'
+(New-Object System.Net.WebClient).DownloadFile('https://aka.ms/ssmsfullsetup', $ssmsPath)
+Start-Process -FilePath $ssmsPath -Args "/install /quiet /norestart" -Verb RunAs -Wait
+Remove-Item $ssmsPath

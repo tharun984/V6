@@ -38,7 +38,7 @@ Start-Process -FilePath 'C:\Program Files\7-Zip\7z.exe' -ArgumentList "x $packag
 
 # $localHostname = Invoke-RestMethod -Headers @{"Metadata"="true"} -Method GET -Uri "http://169.254.169.254/metadata/instance/network/interface/0/ipv4/ipAddress/0/privateIpAddress?api-version=2017-08-01&format=text"
 $localHostname = Invoke-RestMethod -Headers @{"Metadata"="true"} -Method GET -Uri "http://169.254.169.254/metadata/instance/compute/name?api-version=2017-08-01&format=text"
-# $vmid = Invoke-RestMethod -Headers @{"Metadata"="true"} -Method GET -Uri "http://169.254.169.254/metadata/instance/compute/vmId?api-version=2017-08-01&format=text"
+#$vmid = Invoke-RestMethod -Headers @{"Metadata"="true"} -Method GET -Uri "http://169.254.169.254/metadata/instance/compute/vmId?api-version=2017-08-01&format=text"
 $vmRegion = Invoke-RestMethod -Headers @{"Metadata"="true"} -Method GET -Uri "http://169.254.169.254/metadata/instance/compute/location?api-version=2017-08-01&format=text"
 $clientname = "$localHostname($vmRegion)"
 $inputfile = "C:\MetallicBackupGatewayPackage\backupgateway-package-folder\install.xml"
@@ -48,7 +48,7 @@ $client = $xml.SelectSingleNode("//clientComposition/clientInfo/client")
 $clientEntity = $xml.SelectSingleNode("//clientComposition/clientInfo/client/clientEntity")
 $jobResulsDir = $xml.SelectSingleNode("//clientComposition/clientInfo/client/jobResulsDir")
 $indexCache = $xml.SelectSingleNode("//clientComposition/components/mediaAgent/indexCacheDirectory")
-$clientEntity.hostName = $localHostname
+$clientEntity.hostName = "$localHostname"
 $clientEntity.clientName = $clientname
 $client.installDirectory = "E:\ContentStore"
 $jobResulsDir.path = "E:\JobResults"
@@ -57,9 +57,15 @@ $xml.Save($inputfile)
 
 
 #backupgateway-install.
-C:\MetallicBackupGatewayPackage\backupgateway-package-folder\Setup.exe /silent /authcode ${companyauthcode}
+# C:\MetallicBackupGatewayPackage\backupgateway-package-folder\Setup.exe /silent /authcode ${companyauthcode}
+# Wait-Process -InputObject (Get-Process setup)
 
-Wait-Process -InputObject (Get-Process setup)
+$processInfo = Start-Process -FilePath 'C:\MetallicBackupGatewayPackage\backupgateway-package-folder\Setup.exe' -ArgumentList "/silent /authcode ${companyauthcode}" -PassThru -Wait
+
+if($processInfo.ExitCode -ne 0)
+{
+    exit 500
+}
 
 # files-cleanup
 Remove-Item -Recurse -Force 'C:\MetallicBackupGatewayPackage\backupgateway-package-folder' -ErrorAction SilentlyContinue

@@ -82,9 +82,9 @@ try
         Exit 23
     }
 
-	#$vmid = Invoke-RestMethod -Headers @{"Metadata"="true"} -Method GET -Uri "http://169.254.169.254/metadata/instance/compute/vmId?api-version=2017-08-01&format=text"
+	$vmid = Invoke-RestMethod -Headers @{"Metadata"="true"} -Method GET -Uri "http://169.254.169.254/metadata/instance/compute/vmId?api-version=2017-08-01&format=text"
 	#$vmRegion = Invoke-RestMethod -Headers @{"Metadata"="true"} -Method GET -Uri "http://169.254.169.254/metadata/instance/compute/location?api-version=2017-08-01&format=text"
-	#$clientname = "$localHostname($vmRegion)"
+	$clientname = "$localHostname-$vmid"
 	$privateIp = Invoke-RestMethod -Headers @{"Metadata"="true"} -Method GET -Uri "http://169.254.169.254/metadata/instance/network/interface/0/ipv4/ipAddress/0/privateIpAddress?api-version=2017-08-01&format=text"
 	$localHostname = Invoke-RestMethod -Headers @{"Metadata"="true"} -Method GET -Uri "http://169.254.169.254/metadata/instance/compute/name?api-version=2017-08-01&format=text"
 	$inputfile = "C:\MetallicBackupGatewayPackage\backupgateway-package-folder\install.xml"
@@ -95,7 +95,7 @@ try
 	$jobResulsDir = $xml.SelectSingleNode("//clientComposition/clientInfo/client/jobResulsDir")
 	$indexCache = $xml.SelectSingleNode("//clientComposition/components/mediaAgent/indexCacheDirectory")
 	$clientEntity.hostName = "$privateIp"
-	$clientEntity.clientName = "$localHostname"
+	$clientEntity.clientName = $clientname
 	$client.installDirectory = "E:\ContentStore"
 	$jobResulsDir.path = "E:\JobResults"
 	$indexCache.path = "E:\IndexCache"

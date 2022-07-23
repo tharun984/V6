@@ -110,7 +110,8 @@ try
 
 	if($processInfo.ExitCode -ne 0)
 	{
-		exit 24
+		LogError "Backup Gateway package installation failed with error code $($processInfo.ExitCode)"
+        Exit $processInfo.ExitCode
 	}
 
 	# files-cleanup
@@ -122,7 +123,8 @@ try
 	$redisProcessInfo = Start-Process -FilePath $redistributablePath -Args "/install /quiet /norestart" -Verb RunAs -Wait -PassThru
 	if($redisProcessInfo.ExitCode -ne 0)
 	{
-		exit 25
+		LogError "Microsoft Visual C++ redistributable installation failed with error code $($redisProcessInfo.ExitCode)"
+        Exit $redisProcessInfo.ExitCode
 	}
 	Remove-Item $redistributablePath
 
@@ -130,9 +132,10 @@ try
 	$ssmsPath = 'C:\SSMS-Setup-ENU.exe'
 	(New-Object System.Net.WebClient).DownloadFile('https://aka.ms/ssmsfullsetup', $ssmsPath)
 	$ssmsProcessInfo = Start-Process -FilePath $ssmsPath -Args "/install /quiet /norestart" -Verb RunAs -Wait -PassThru
-	if($redisProcessInfo.ExitCode -ne 0)
+	if($ssmsProcessInfo.ExitCode -ne 0)
 	{
-		exit 26
+		LogError "SQL Server Management Studio(SSMS) installation failed with error code $($ssmsProcessInfo.ExitCode)"
+        Exit $ssmsProcessInfo.ExitCode
 	}
 	Remove-Item $ssmsPath
 }
